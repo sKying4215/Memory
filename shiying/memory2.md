@@ -87,4 +87,104 @@ public:
 基类析构函数运行中.....
 
 ****************深拷贝  浅拷贝**************
+//  Created by 石迎 on 2019/2/15.
+//  Copyright © 2019年 石迎. All rights reserved.
+//
+
+
+#include <iostream>
+using namespace std;
+
+class Student
+{
+private:
+    int num;
+    char *name;
+public:
+    Student();
+    ~Student();
+};
+
+Student::Student()
+{
+    name = new char(20);
+    cout << "Student"<< (long)name << endl;
     
+}
+Student::~Student()
+{
+    cout << "~Student " << (long)name << endl;
+    delete name;
+    name = NULL;
+}
+
+int main()
+{
+    {// 花括号让s1和s2变成局部对象，方便测试
+        Student s1;
+        Student s2(s1);// 复制对象
+    }
+    system("pause");
+    return 0;
+}
+输出：
+Student4300223056
+~Student 4300223056
+~Student 4300223056
+testcpp(2956,0x10039b380) malloc: *** error for object 0x100503250: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+报错了，由于未定义拷贝构造函数，所以系统默认进行了浅拷贝。所以 s1和S2指向了同一个内存空间，导致同一个内存空间释放了两次。
+
+解决方案：
+#include <iostream>
+using namespace std;
+
+class Student
+{
+private:
+    int num;
+    char *name;
+public:
+    Student();
+    ~Student();
+    Student(const Student &s);//拷贝构造函数
+};
+
+Student::Student()
+{
+    name = new char(20);
+    cout << "Student"<< (long)name << endl;
+    
+}
+Student::~Student()
+{
+    cout << "~Student " << (long)name << endl;
+    delete name;
+    name = NULL;
+}
+Student::Student(const Student &s)
+{
+    name = new char(strlen(s.name));
+    memcpy(name, s.name, strlen(s.name));
+    cout << "copy " << endl;
+}
+
+int main()
+{
+    {// 花括号让s1和s2变成局部对象，方便测试
+        Student s1;
+        Student s2(s1);// 复制对象
+    }
+    system("pause");
+    return 0;
+}
+输出：
+Student4299172368
+copy 
+~Student 4299172384
+~Student 4299172368
+执行结果调用了一次构造函数调用了一次拷贝函数，两次析构函数 name的内存地址发生了变化，没有指向同一个地址。
+
+所以浅拷贝只是对指针进行拷贝。拷贝后两个指针指向同一个内存地址。而深拷贝不但对指针进行了拷贝，同时也对指针指向的内容进行了拷贝。所以指针指向的地址也不同。
+1.当函数的参数为对象时，实参传递给形参的实际上是实参的一个拷贝对象，系统自动通过拷贝构造函数实现；
+2.当函数的返回值为一个对象时，该对象实际上是函数内对象的一个拷贝，用于返回函数调用处。
